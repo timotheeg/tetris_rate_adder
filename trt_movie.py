@@ -1,13 +1,15 @@
 import sys
+import numpy
+import cv2
+import time
 
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 
-import numpy
-import cv2
-
 from player import Player
+
+start_time = time.time()
 
 font_size = 32
 
@@ -36,6 +38,11 @@ players = [player1, player2]
 source_file = sys.argv[1]
 output_file = "%s.trt.avi" % source_file
 
+print("Generating TRT from file\n%s\ninto overlay file\n%s." % (
+	source_file,
+	output_file
+))
+
 cap = cv2.VideoCapture(source_file)
 out = cv2.VideoWriter(
 	output_file,
@@ -60,7 +67,7 @@ while True:
 	trt_frame = frame_template.copy()
 	draw = ImageDraw.Draw(trt_frame)
 
-	if frame_count % 100 == 0:
+	if frame_count % 250 == 0:
 		print("Processing frame %d" % frame_count)
 
 	for player in players:
@@ -85,3 +92,5 @@ while True:
 	out.write(trt_frame);
 
 out.release()
+
+print("\nDone - processed %d frames in %d seconds" % (frame_count, int(time.time() - start_time)))
