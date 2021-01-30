@@ -5,6 +5,18 @@ from PIL import ImageDraw
 import numpy
 import cv2
 
+font_size = 32
+
+p1_line_count = (629, 235, 90, 28)
+p1_trt_header = (475, 865)
+p1_trt_value = (475, 865)
+
+p2_line_count = (1038, 235, 90, 28)
+p2_trt_header = (1361, 865)
+p2_trt_value = (1361, 865)
+
+
+
 out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (258, 126))
 box = Image.open("trt_box.png");
 
