@@ -14,8 +14,6 @@ digitsMap = {
     "T": ["0", "1", "2", "null"],
 }
 
-SPRITE_ROOT = "nestris_ocr/assets/"
-
 MONO = True
 IMAGE_SIZE = 7
 BLOCK_SIZE = IMAGE_SIZE + 1
@@ -49,10 +47,10 @@ def setupColour(prefix, outputDict, digitList):
 
 def setupData():
     setupColour(
-        "nestris_ocr/assets/sprite_templates/", data, digitsMap["A"]
+        "./sprite_templates/", data, digitsMap["A"]
     )  # setup white
     setupColour(
-        "nestris_ocr/assets/sprite_templates/red", redData, digitsMap["D"]
+        "./sprite_templates/red", redData, digitsMap["D"]
     )  # setup red
 
 
@@ -121,6 +119,7 @@ def scoreImage(img, digitPattern, show=False, red=False):
     count = len(digitPattern)
     img = convertImg(img, count, show)
     label = ""
+    value = 0
     for (i, pattern) in enumerate(digitPattern):
         if pattern == "X":
             result = "X"
@@ -128,10 +127,12 @@ def scoreImage(img, digitPattern, show=False, red=False):
             result = getDigit(img, pattern, i * (BLOCK_SIZE * IMAGE_MULT), 0, red)[0]
 
         if result == "null":
-            return None
+            return None, None
         else:
+            value += int(result, 16) * (10**(count - i - 1))
             label += result
-    return label
+
+    return label, value
 
 
 setupData()

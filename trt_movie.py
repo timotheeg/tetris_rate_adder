@@ -7,24 +7,42 @@ from PIL import ImageDraw
 import numpy
 import cv2
 
-from utils import xywh_to_ltrb
+from player import Player
 
 font_size = 32
 
 p1_line_count_xywh = (629, 235, 90, 28)
-p1_trt_header_xy = (475, 865)
-p1_trt_value_xy = (475, 865)
+p1_trt_header_xy = (470, 865)
+p1_trt_value_xy = (472, 899)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
-p2_trt_header_xy = (1361, 865)
-p2_trt_value_xy = (1361, 865)
+p2_trt_header_xy = (1356, 865)
+p2_trt_value_xy = (1358, 899)
 
 trt_template = './trts_template.png'
+
+frame_template = Image.open(trt_template)
+draw = ImageDraw.Draw(frame_template)
+font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32)
+
+draw.text(p1_trt_header_xy, "TRT", (255,255,255), font=font)
+draw.text(p2_trt_header_xy, "TRT", (255,255,255), font=font)
+
+player1 = Player(p1_line_count_xywh, p1_trt_value_xy)
+player2 = Player(p2_line_count_xywh, p2_trt_value_xy)
+
+players = [player1, player2]
 
 source_file = sys.argv[1]
 output_file = "%s.trt.avi" % source_file
 
 cap = cv2.VideoCapture(source_file)
+out = cv2.VideoWriter(
+	output_file,
+	cv2.VideoWriter_fourcc(*'DIVX'),
+	23.976,
+	(1920, 1080)
+)
 
 frame_count = 0
 
@@ -34,49 +52,36 @@ while True:
 	if not cv2_retval:
 		break
 
-
 	frame_count += 1
 
 	cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
-
 	frame = Image.fromarray(cv2_image)
 
-	if frame_count < 500:
-		continue
+	trt_frame = frame_template.copy()
+	draw = ImageDraw.Draw(trt_frame)
 
-	p1_lines_img = frame.crop(xywh_to_ltrb(p1_line_count_xywh))
-	p2_lines_img = frame.crop(xywh_to_ltrb(p2_line_count_xywh))
+	if frame_count % 100 == 0:
+		print("Processing frame %d" % frame_count)
 
-	p1_lines_img.show()
-	p2_lines_img.show()
-	frame.show()
+	for player in players:
+		player.setFrame(frame)
+		trt = player.getTRT()
 
-	break
+		if trt == None:
+			label = "---"
+		elif trt >= 1:
+			label = "100"
+		else:
+			label = "%02d%%" % round(trt * 100)
 
+		draw.text(
+			player.write_loc,
+			label,
+			(255,255,255),
+			font=font
+		)
 
-
-
-
-
-
-'''
-out = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc(*'DIVX'), 15, (258, 126))
-box = Image.open(trt_template);
-
-for n in range(1, 100):
-	img = box.copy();
-	draw = ImageDraw.Draw(img)
-	font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32, )
-	draw.text(
-	 	(85, 69),
-	 	"%d%%" % n,
-	 	(255,255,255),
-	 	font=font
-	 ) # this will draw text with Blackcolor and 16 size
-
-	frame = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-
-	out.write(frame);
+	trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
+	out.write(trt_frame);
 
 out.release()
-'''
