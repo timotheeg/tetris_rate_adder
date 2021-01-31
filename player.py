@@ -33,7 +33,7 @@ class Player:
 		self.line_clear_events.append({
 			"lines": lines,
 			"trt": self.tetris_line_count / self.total_line_count
-		});
+		})
 
 	def getTRT(self):
 		if self.total_line_count == None:
