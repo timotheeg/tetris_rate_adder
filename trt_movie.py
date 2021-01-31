@@ -17,12 +17,14 @@ font_size = 32
 p1_line_count_xywh = (629, 235, 90, 28)
 p1_score_xywh = (660, 81, 232, 35)
 p1_level_xywh = (491, 1003, 59, 28)
+p1_trt_box_xy = (451, 841)
 p1_trt_header_xy = (470, 865)
 p1_trt_value_xy = (472, 899)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
 p2_score_xywh = (1069, 81, 232, 35)
 p2_level_xywh = (1377, 1003, 59, 28)
+p2_trt_box_xy = (1337, 841)
 p2_trt_header_xy = (1356, 865)
 p2_trt_value_xy = (1358, 899)
 
