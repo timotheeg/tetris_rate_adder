@@ -2,6 +2,7 @@ import sys
 import numpy
 import cv2
 import time
+import json
 
 from PIL import Image
 from PIL import ImageFont
@@ -14,10 +15,14 @@ start_time = time.time()
 font_size = 32
 
 p1_line_count_xywh = (629, 235, 90, 28)
+p1_score_xywh = (660, 81, 232, 35)
+p1_level_xywh = (491, 1003, 59, 28)
 p1_trt_header_xy = (470, 865)
 p1_trt_value_xy = (472, 899)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
+p2_score_xywh = (1069, 81, 232, 35)
+p2_level_xywh = (1377, 1003, 59, 28)
 p2_trt_header_xy = (1356, 865)
 p2_trt_value_xy = (1358, 899)
 
@@ -30,8 +35,8 @@ font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32)
 draw.text(p1_trt_header_xy, "TRT", (255,255,255), font=font)
 draw.text(p2_trt_header_xy, "TRT", (255,255,255), font=font)
 
-player1 = Player(p1_line_count_xywh, p1_trt_value_xy)
-player2 = Player(p2_line_count_xywh, p2_trt_value_xy)
+player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_value_xy)
+player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_value_xy)
 
 players = [player1, player2]
 
@@ -72,6 +77,7 @@ while True:
 
 	for player in players:
 		player.setFrame(frame)
+
 		trt = player.getTRT()
 
 		if trt == None:
@@ -82,7 +88,7 @@ while True:
 			label = "%02d%%" % round(trt * 100)
 
 		draw.text(
-			player.write_loc,
+			player.trt_write_loc,
 			label,
 			(255,255,255),
 			font=font
@@ -92,5 +98,13 @@ while True:
 	out.write(trt_frame);
 
 out.release()
+
+frames_file = "%s.frames.json" % source_file
+
+with open(frames_file, "w+") as frames:
+	json.dump({
+		"player1": player1.getFrames(),
+		"player2": player2.getFrames(),
+	}, frames)
 
 print("\nDone - processed %d frames in %d seconds" % (frame_count, int(time.time() - start_time)))
