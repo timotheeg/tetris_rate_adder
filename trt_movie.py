@@ -43,7 +43,7 @@ player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_value_
 players = [player1, player2]
 
 source_file = sys.argv[1]
-output_file = "%s.trt.avi" % source_file
+output_file = "%s.trt.mp4" % source_file
 
 print("Generating TRT from file\n%s\ninto overlay file\n%s." % (
 	source_file,
@@ -53,7 +53,7 @@ print("Generating TRT from file\n%s\ninto overlay file\n%s." % (
 cap = cv2.VideoCapture(source_file)
 out = cv2.VideoWriter(
 	output_file,
-	cv2.VideoWriter_fourcc(*'DIVX'),
+	cv2.VideoWriter_fourcc(*'mp4v'),
 	23.976,
 	(1920, 1080)
 )
