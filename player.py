@@ -37,7 +37,8 @@ class Player:
 			return
 
 		if line_count == None or line_count == 0:
-			self.total_line_count = None
+			self.tetris_line_count = 0
+			self.total_line_count = line_count
 			return
 
 		lines = line_count - (self.total_line_count or 0)
@@ -46,13 +47,13 @@ class Player:
 		if lines == 4:
 			self.tetris_line_count += 4
 
-		self.line_clear_events.append({
-			"lines": lines,
-			"trt": self.tetris_line_count / self.total_line_count
-		})
+		# self.line_clear_events.append({
+		#	"lines": lines,
+		#	"trt": self.tetris_line_count / self.total_line_count
+		# })
 
 	def getTRT(self):
-		if self.total_line_count == None:
+		if self.total_line_count == None or self.total_line_count == 0:
 			return None
 
 		return self.tetris_line_count / self.total_line_count
