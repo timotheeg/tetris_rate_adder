@@ -1,6 +1,8 @@
 from utils import xywh_to_ltrb
 from digitocr import scoreImage
 
+FRAMES_READ_DELAY = 1
+
 class Player:
 	def __init__(self, lines_loc_xywh, score_loc_xywh, level_loc_xywh, trt_write_loc_xy):
 		self.lines_loc = xywh_to_ltrb(lines_loc_xywh)
@@ -12,7 +14,7 @@ class Player:
 		self.frames = []
 		self.line_clear_events = []
 
-		self.pending_lines = False # controls one frame delay to read line count
+		self.remaining_delay_frames = 0 # controls one frame delay to read line count
 
 		self.tetris_line_count = 0
 		self.total_line_count = None;
@@ -38,12 +40,14 @@ class Player:
 		if line_count == self.total_line_count:
 			return
 
-		if not self.pending_lines:
-			# wait one frame before reading the line change
-			self.pending_lines = True
+		if self.remaining_delay_frames <= 0:
+			self.remaining_delay_frames = FRAMES_READ_DELAY
 			return
 
-		self.pending_lines = False
+		self.remaining_delay_frames -= 1
+
+		if self.remaining_delay_frames > 0:
+			return
 
 		if line_count == None or line_count == 0:
 			self.tetris_line_count = 0
