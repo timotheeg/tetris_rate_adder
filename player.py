@@ -4,12 +4,13 @@ from digitocr import scoreImage
 FRAMES_READ_DELAY = 1
 
 class Player:
-	def __init__(self, lines_loc_xywh, score_loc_xywh, level_loc_xywh, trt_box_xy):
+	def __init__(self, lines_loc_xywh, score_loc_xywh, level_loc_xywh, trt_box_xy, tls_box_xy):
 		self.lines_loc = xywh_to_ltrb(lines_loc_xywh)
 		self.score_loc = xywh_to_ltrb(score_loc_xywh)
 		self.level_loc = xywh_to_ltrb(level_loc_xywh)
 
 		self.trt_box_xy = trt_box_xy
+		self.tls_box_xy = tls_box_xy
 
 		self.frames = []
 		self.line_clear_events = []
@@ -17,7 +18,7 @@ class Player:
 		self.remaining_delay_frames = 0 # controls one frame delay to read line count
 
 		self.tetris_line_count = 0
-		self.total_line_count = None;
+		self.total_line_count = None
 		self.has_been_valid = False
 
 	def setFrame(self, frame):
@@ -82,6 +83,6 @@ class Player:
 		elif trt >= 1:
 			label = "100"
 		else:
-			label = "%02d%%" % round(trt * 100)
+			label = "%02d%%" % round(trt * 100) # should this be floor insted of round?
 
 		return label

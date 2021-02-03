@@ -17,7 +17,7 @@ start_time = time.time()
 source_file = sys.argv[1]
 json_frames_file = "%s%s" % (source_file, json_frames_extension)
 
-do_compose = len(sys.argv) > 2 and sys.argv[2] == '--compose'
+do_verify = len(sys.argv) > 2 and sys.argv[2] == '--verify'
 from_json_frames = sys.argv[-1] == '--from-json-frames'
 
 cap = None
@@ -27,7 +27,7 @@ if from_json_frames:
 	with open(json_frames_file) as f:
 		json_frames = json.load(f)
 
-	if do_compose:
+	if do_verify:
 		cap = cv2.VideoCapture(source_file)
 else:
 	cap = cv2.VideoCapture(source_file)
@@ -38,37 +38,43 @@ font_size = 32
 
 composite_color = (255, 0, 254, 255)
 
-box_trt_header_xy = (19, 24)
-box_trt_value_xy = (21, 58)
+box_header_xy = (19, 24)
+box_value_xy = (21, 58)
 
 p1_line_count_xywh = (629, 235, 90, 28)
 p1_score_xywh = (660, 81, 232, 35)
 p1_level_xywh = (491, 1003, 59, 28)
-p1_trt_box_xy = (451, 841)
+p1_trt_box_xy = (451, 842)
+p1_tls_box_xy = (451, 176)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
 p2_score_xywh = (1069, 81, 232, 35)
 p2_level_xywh = (1377, 1003, 59, 28)
-p2_trt_box_xy = (1337, 841)
+p2_trt_box_xy = (1337, 842)
+p2_tls_box_xy = (1337, 176)
 
 trt_template = './trts_template.png'
 box_template = './trt_box.png'
 
 composite_base = Image.new('RGBA', (1920, 1080), composite_color)
 
-box_img = Image.open(box_template)
-draw = ImageDraw.Draw(box_img)
-draw.text(box_trt_header_xy, "TRT", (255,255,255), font=font)
+trt_box_img = Image.open(box_template)
+draw = ImageDraw.Draw(trt_box_img)
+draw.text(box_header_xy, "TRT", (255,255,255), font=font)
 
-player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy)
-player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy)
+tls_box_img = Image.open(box_template)
+draw = ImageDraw.Draw(tls_box_img)
+draw.text(box_header_xy, "TLS", (255,255,255), font=font)
+
+player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy, p1_tls_box_xy)
+player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy, p2_tls_box_xy)
 
 players = [player1, player2]
 
 output_file = "%s.trt.mp4" % source_file
 
-if do_compose:
-	output_file = "%s.composed.mp4" % source_file
+if do_verify:
+	output_file = "%s.verify.mp4" % source_file
 
 print("Generating TRT from file\n%s\ninto overlay file\n%s" % (
 	source_file,
@@ -89,11 +95,45 @@ if cap:
 else:
 	total_frames = len(json_frames)
 
+
+def drawPlayerData(player, frame):
+	global trt_box_img
+	global box_value_xy
+	global do_verify
+	global font
+
+	label = player.getTRTLabel()
+
+	trt_box = trt_box_img.copy()
+	draw = ImageDraw.Draw(trt_box)
+	draw.text(
+		box_value_xy,
+		label,
+		(255,255,255,255),
+		font=font
+	)
+
+	frame.paste(trt_box, player.trt_box_xy, trt_box)
+
+	if do_verify:
+		tls_box = tls_box_img.copy()
+		draw = ImageDraw.Draw(tls_box)
+		draw.text(
+			box_value_xy,
+			"%03d" % player.tetris_line_count,
+			(255,255,255,255),
+			font=font
+		)
+
+		frame.paste(tls_box, player.tls_box_xy, tls_box)
+
+
+
 frame_start = time.time()
 
 if from_json_frames:
 	for frame_idx, frame_data in enumerate(json_frames):
-		if do_compose:
+		if do_verify:
 			cv2_retval, cv2_image = cap.read() # assumes read is successful, since json frames were generated from the source file
 			cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
 			frame = Image.fromarray(cv2_image)
@@ -104,24 +144,12 @@ if from_json_frames:
 		for player_idx, player_frame_data in enumerate(frame_data):
 			player = players[player_idx]
 			player.setFrameData(player_frame_data)
-
-			label = player.getTRTLabel()
-
-			trt_box = box_img.copy()
-			draw = ImageDraw.Draw(trt_box)
-			draw.text(
-				box_trt_value_xy,
-				label,
-				(255,255,255,255),
-				font=font
-			)
-
-			trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
+			drawPlayerData(player, trt_frame)
 
 		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
 		out.write(trt_frame);
 
-		print("Processed frame %d of %d (at %5.1f fps)" % (frame_idx + 1, total_frames, (frame_idx + 1) / (time.time() - frame_start)), end="\r")
+		print("Processed frame %d of %d (at %5.1f fps) (json)" % (frame_idx + 1, total_frames, (frame_idx + 1) / (time.time() - frame_start)), end="\r")
 
 else:
 	while True:
@@ -135,33 +163,21 @@ else:
 		cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
 		frame = Image.fromarray(cv2_image)
 
-		if do_compose:
+		if do_verify:
 			trt_frame = frame
 		else:
 			trt_frame = composite_base
 
 		for player in players:
 			player.setFrame(frame)
-
-			label = player.getTRTLabel()
-
-			trt_box = box_img.copy()
-			draw = ImageDraw.Draw(trt_box)
-			draw.text(
-				box_trt_value_xy,
-				label,
-				(255,255,255,255),
-				font=font
-			)
-
-			trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
+			drawPlayerData(player, trt_frame)
 
 		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
 		out.write(trt_frame);
 
-		print("Processed frame %d of %d (at %5.1f fps)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
+		print("Processed ocr frame %d of %d (at %5.1f fps) (ocr)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
 
-	out.release()
+out.release()
 
 with open(json_frames_file, "w+") as frames:
 	json.dump(list(zip(player1.getFrames(), player2.getFrames())), frames)
