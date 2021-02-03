@@ -10,13 +10,27 @@ from PIL import ImageDraw
 
 from player import Player
 
+json_frames_extension = '.frames.json'
+
 start_time = time.time()
 
 source_file = sys.argv[1]
+json_frames_file = "%s%s" % (source_file, json_frames_extension)
 
 do_compose = len(sys.argv) > 2 and sys.argv[2] == '--compose'
+from_json_frames = sys.argv[-1] == '--from-json-frames'
 
-cap = cv2.VideoCapture(source_file)
+cap = None
+json_frames = None
+
+if from_json_frames:
+	with open(json_frames_file) as f:
+		json_frames = json.load(f)
+
+	if do_compose:
+		cap = cv2.VideoCapture(source_file)
+else:
+	cap = cv2.VideoCapture(source_file)
 
 font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32)
 
@@ -69,62 +83,87 @@ out = cv2.VideoWriter(
 )
 
 frame_count = 0
-total_frames= cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+if cap:
+	total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+else:
+	total_frames = len(json_frames)
 
 frame_start = time.time()
 
-while True:
-	cv2_retval, cv2_image = cap.read()
-
-	if not cv2_retval:
-		break
-
-	frame_count += 1
-
-	cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
-	frame = Image.fromarray(cv2_image)
-
-	if do_compose:
-		trt_frame = frame
-	else:
-		trt_frame = composite_base
-
-	for player in players:
-		player.setFrame(frame)
-
-		trt = player.getTRT()
-
-		if trt == None:
-			label = "---"
-		elif trt >= 1:
-			label = "100"
+if from_json_frames:
+	for frame_idx, frame_data in enumerate(json_frames):
+		if do_compose:
+			cv2_retval, cv2_image = cap.read() # assumes read is successful, since json frames were generated from the source file
+			cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
+			frame = Image.fromarray(cv2_image)
+			trt_frame = frame
 		else:
-			label = "%02d%%" % round(trt * 100)
+			trt_frame = composite_base
 
-		trt_box = box_img.copy()
-		draw = ImageDraw.Draw(trt_box)
-		draw.text(
-			box_trt_value_xy,
-			label,
-			(255,255,255,255),
-			font=font
-		)
+		for player_idx, player_frame_data in enumerate(frame_data):
+			player = players[player_idx]
+			player.setFrameData(player_frame_data)
 
-		trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
+			label = player.getTRTLabel()
 
-	trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
-	out.write(trt_frame);
+			trt_box = box_img.copy()
+			draw = ImageDraw.Draw(trt_box)
+			draw.text(
+				box_trt_value_xy,
+				label,
+				(255,255,255,255),
+				font=font
+			)
 
-	print("Processed frame %d of %d (at %5.1f fps)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
+			trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
 
-out.release()
+		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
+		out.write(trt_frame);
 
-frames_file = "%s.frames.json" % source_file
+		print("Processed frame %d of %d (at %5.1f fps)" % (frame_idx + 1, total_frames, (frame_idx + 1) / (time.time() - frame_start)), end="\r")
 
-with open(frames_file, "w+") as frames:
-	json.dump({
-		"player1": player1.getFrames(),
-		"player2": player2.getFrames(),
-	}, frames)
+else:
+	while True:
+		cv2_retval, cv2_image = cap.read()
+
+		if not cv2_retval:
+			break
+
+		frame_count += 1
+
+		cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
+		frame = Image.fromarray(cv2_image)
+
+		if do_compose:
+			trt_frame = frame
+		else:
+			trt_frame = composite_base
+
+		for player in players:
+			player.setFrame(frame)
+
+			label = player.getTRTLabel()
+
+			trt_box = box_img.copy()
+			draw = ImageDraw.Draw(trt_box)
+			draw.text(
+				box_trt_value_xy,
+				label,
+				(255,255,255,255),
+				font=font
+			)
+
+			trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
+
+		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
+		out.write(trt_frame);
+
+		print("Processed frame %d of %d (at %5.1f fps)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
+
+	out.release()
+
+with open(json_frames_file, "w+") as frames:
+	json.dump(list(zip(player1.getFrames(), player2.getFrames())), frames)
 
 print("\nDone - processed %d frames in %d seconds" % (frame_count, int(time.time() - start_time)))

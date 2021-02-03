@@ -30,8 +30,11 @@ class Player:
 		level_img = frame.crop(self.level_loc)
 		level = scoreImage(level_img, "TD")[1]
 
-		self.frames.append((lines, score, level))
-		self.setLineCount(lines)
+		self.setFrameData((lines, score, level))
+
+	def setFrameData(self, values): # lines, score, level
+		self.frames.append(values)
+		self.setLineCount(values[0])
 
 	def getFrames(self):
 		return self.frames
@@ -72,5 +75,13 @@ class Player:
 		return self.tetris_line_count / self.total_line_count
 
 	def getTRTLabel(self):
-		pass
+		trt = self.getTRT()
 
+		if trt == None:
+			label = "---"
+		elif trt >= 1:
+			label = "100"
+		else:
+			label = "%02d%%" % round(trt * 100)
+
+		return label
