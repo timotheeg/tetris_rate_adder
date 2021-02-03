@@ -12,45 +12,55 @@ from player import Player
 
 start_time = time.time()
 
+source_file = sys.argv[1]
+
+do_compose = len(sys.argv) > 2 and sys.argv[2] == '--compose'
+
+cap = cv2.VideoCapture(source_file)
+
+font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32)
+
 font_size = 32
+
+composite_color = (255, 0, 254, 255)
+
+box_trt_header_xy = (19, 24)
+box_trt_value_xy = (21, 58)
 
 p1_line_count_xywh = (629, 235, 90, 28)
 p1_score_xywh = (660, 81, 232, 35)
 p1_level_xywh = (491, 1003, 59, 28)
 p1_trt_box_xy = (451, 841)
-p1_trt_header_xy = (470, 865)
-p1_trt_value_xy = (472, 899)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
 p2_score_xywh = (1069, 81, 232, 35)
 p2_level_xywh = (1377, 1003, 59, 28)
 p2_trt_box_xy = (1337, 841)
-p2_trt_header_xy = (1356, 865)
-p2_trt_value_xy = (1358, 899)
 
 trt_template = './trts_template.png'
+box_template = './trt_box.png'
 
-frame_template = Image.open(trt_template)
-draw = ImageDraw.Draw(frame_template)
-font = ImageFont.truetype(r'./prstartk_nes_tetris_8.ttf', 32)
+composite_base = Image.new('RGBA', (1920, 1080), composite_color)
 
-draw.text(p1_trt_header_xy, "TRT", (255,255,255), font=font)
-draw.text(p2_trt_header_xy, "TRT", (255,255,255), font=font)
+box_img = Image.open(box_template)
+draw = ImageDraw.Draw(box_img)
+draw.text(box_trt_header_xy, "TRT", (255,255,255), font=font)
 
-player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_value_xy)
-player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_value_xy)
+player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy)
+player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy)
 
 players = [player1, player2]
 
-source_file = sys.argv[1]
 output_file = "%s.trt.mp4" % source_file
 
-print("Generating TRT from file\n%s\ninto overlay file\n%s." % (
+if do_compose:
+	output_file = "%s.composed.mp4" % source_file
+
+print("Generating TRT from file\n%s\ninto overlay file\n%s" % (
 	source_file,
 	output_file
 ))
 
-cap = cv2.VideoCapture(source_file)
 out = cv2.VideoWriter(
 	output_file,
 	cv2.VideoWriter_fourcc(*'mp4v'),
@@ -59,6 +69,9 @@ out = cv2.VideoWriter(
 )
 
 frame_count = 0
+total_frames= cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+frame_start = time.time()
 
 while True:
 	cv2_retval, cv2_image = cap.read()
@@ -71,11 +84,10 @@ while True:
 	cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
 	frame = Image.fromarray(cv2_image)
 
-	trt_frame = frame_template.copy()
-	draw = ImageDraw.Draw(trt_frame)
-
-	if frame_count % 250 == 0:
-		print("Processing frame %d" % frame_count)
+	if do_compose:
+		trt_frame = frame
+	else:
+		trt_frame = composite_base
 
 	for player in players:
 		player.setFrame(frame)
@@ -89,15 +101,21 @@ while True:
 		else:
 			label = "%02d%%" % round(trt * 100)
 
+		trt_box = box_img.copy()
+		draw = ImageDraw.Draw(trt_box)
 		draw.text(
-			player.trt_write_loc,
+			box_trt_value_xy,
 			label,
-			(255,255,255),
+			(255,255,255,255),
 			font=font
 		)
 
+		trt_frame.paste(trt_box, player.trt_box_xy, trt_box)
+
 	trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
 	out.write(trt_frame);
+
+	print("Processed frame %d of %d (at %5.1f fps)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
 
 out.release()
 

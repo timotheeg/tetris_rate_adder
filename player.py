@@ -4,12 +4,12 @@ from digitocr import scoreImage
 FRAMES_READ_DELAY = 1
 
 class Player:
-	def __init__(self, lines_loc_xywh, score_loc_xywh, level_loc_xywh, trt_write_loc_xy):
+	def __init__(self, lines_loc_xywh, score_loc_xywh, level_loc_xywh, trt_box_xy):
 		self.lines_loc = xywh_to_ltrb(lines_loc_xywh)
 		self.score_loc = xywh_to_ltrb(score_loc_xywh)
 		self.level_loc = xywh_to_ltrb(level_loc_xywh)
 
-		self.trt_write_loc = trt_write_loc_xy
+		self.trt_box_xy = trt_box_xy
 
 		self.frames = []
 		self.line_clear_events = []
