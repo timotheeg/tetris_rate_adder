@@ -17,6 +17,10 @@ While the line count is stable, when it does changes, we have seen in the edited
 
 The read delay could easily be increased to 2 or 3 frames as needed, should the transition fuzziness affect multiple consecutive frames.
 
+![Fuzzy Frame](./fuzzy_frame.png)
+Example of a fuzzy frame on line clear
+
+
 
 ## Installation
 
