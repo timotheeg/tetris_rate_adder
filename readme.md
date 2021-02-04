@@ -1,6 +1,10 @@
 ## Tetris Rate Adder
 
-This project generates generates stats overlay video file from a TreyVision match rendering.
+This project generates stats overlay video file from a TreyVision match rendering. Specifically, adding the Tetris rate where it was missing.
+
+Example of an overlay frame:
+![Sample Overlay frame](./sample_overlay_frame.png)
+
 
 The program works on the following assumptions about the TreyVision files:
 * They are all following the **exact** same layout (meaning the line count is always found at the same location)
@@ -17,9 +21,9 @@ While the line count is stable, when it does changes, we have seen in the edited
 
 The read delay could easily be increased to 2 or 3 frames as needed, should the transition fuzziness affect multiple consecutive frames.
 
+Example of a fuzzy frame on line clear
 ![Fuzzy Frame](./fuzzy_frame.png)
 
-Example of a fuzzy frame on line clear
 
 
 
@@ -76,7 +80,5 @@ python3 trt_movie.py <PATH_TO_TREYVISION_GAME_FILE> --from-json-frames
 
 Running this second step is much faster, because it uses the frame data from a json file produced by the first command, and does not have to read the source file and ocr again 👍!
 
-![Verification mode](./verify_mode.png)
-
 Verification mode
-
+![Verification mode](./verify_mode.png)
