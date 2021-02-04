@@ -17,6 +17,7 @@ start_time = time.time()
 source_file = sys.argv[1]
 json_frames_file = "%s%s" % (source_file, json_frames_extension)
 
+# Very cheap and unreliable argument parsing, but it'll work for our simple use cases
 do_verify = len(sys.argv) > 2 and sys.argv[2] == '--verify'
 from_json_frames = sys.argv[-1] == '--from-json-frames'
 
@@ -175,10 +176,11 @@ else:
 		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
 		out.write(trt_frame);
 
-		print("Processed ocr frame %d of %d (at %5.1f fps) (ocr)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
+		print("Processed frame %d of %d (at %5.1f fps) (ocr)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
 
 out.release()
 
+# Dump the OCRed values into a json file
 with open(json_frames_file, "w+") as frames:
 	json.dump(list(zip(player1.getFrames(), player2.getFrames())), frames)
 
