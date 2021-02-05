@@ -76,13 +76,18 @@ class Player:
 		return self.tetris_line_count / self.total_line_count
 
 	def getTRTLabel(self):
-		trt = self.getTRT()
-
-		if trt == None:
+		if self.total_line_count == None:
+			label = ""
+		elif self.total_line_count == 0:
 			label = "---"
-		elif trt >= 1:
-			label = "100"
 		else:
-			label = "%02d%%" % round(trt * 100) # should this be floor insted of round?
+			trt = self.getTRT()
+
+			if trt <= 0:
+				label = "---"
+			elif trt >= 1:
+				label = "100"
+			elif trt < 1:
+				label = "%02d%%" % round(trt * 100) # should this be floor insted of round?
 
 		return label
