@@ -83,11 +83,9 @@ class Player:
 		else:
 			trt = tetris_line_count / total_line_count
 
-			if trt < 0:
-				label = "???"
-			elif trt >= 1:
+			if trt >= 1:
 				label = "100"
-			elif trt < 1:
+			else:
 				label = "%02d%%" % round(trt * 100) # should this be floor insted of round?
 
 		return label
