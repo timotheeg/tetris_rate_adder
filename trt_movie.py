@@ -122,7 +122,7 @@ def drawPlayerData(player, frame, frame_idx):
 		frame.paste(tls_box, player.tls_box_xy, tls_box)
 
 
-def drawBufferEntry(entry):
+def drawBufferEntry(entry, tag):
 	idx, frame = entry
 
 	for player in players:
@@ -131,7 +131,15 @@ def drawBufferEntry(entry):
 	frame = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
 	out.write(frame);
 
-	print("Processed frame %d of %d (at %5.1f fps) (json)" % (idx + 1, total_frames, (idx + 1) / (time.time() - frame_start)), end="\r")
+	print("Processed frame %d of %d (at %5.1f fps) (%s)" %
+		(
+			idx + 1,
+			total_frames,
+			(idx + 1) / (time.time() - frame_start),
+			tag
+		),
+		end="\r"
+	)
 
 
 frame_buffer_size = 1 # dirty, make a config to synchronize with read delay instead - gee -_-
@@ -155,7 +163,7 @@ if from_json_frames:
 		frame_buffer.append((frame_idx, trt_frame))
 
 		if len(frame_buffer) > frame_buffer_size:
-			drawBufferEntry(frame_buffer.pop(0))
+			drawBufferEntry(frame_buffer.pop(0), "json")
 
 else:
 	frame_idx = -1
@@ -182,12 +190,12 @@ else:
 		frame_buffer.append((frame_idx, trt_frame))
 
 		if len(frame_buffer) > frame_buffer_size:
-			drawBufferEntry(frame_buffer.pop(0))
+			drawBufferEntry(frame_buffer.pop(0), "ocr")
 
 
 # adds last frames from buffer
 while frame_buffer:
-	drawBufferEntry(frame_buffer.pop(0))
+	drawBufferEntry(frame_buffer.pop(0), "")
 
 out.release()
 

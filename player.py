@@ -69,7 +69,7 @@ class Player:
 		self.total_line_count = line_count
 		derived_values = (self.total_line_count, self.tetris_line_count)
 
-		# Adjust all the frame data from READ DELAY
+		# Backfill all the frame data
 		for delayed_frame_idx in range(FRAMES_READ_DELAY + 1):
 			self.derived_data[-1 * delayed_frame_idx - 1] = derived_values
 
