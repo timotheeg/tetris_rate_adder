@@ -13,13 +13,12 @@ class Player:
 		self.tls_box_xy = tls_box_xy
 
 		self.frames = []
-		self.line_clear_events = []
+		self.derived_data = []
 
 		self.remaining_delay_frames = 0 # controls one frame delay to read line count
 
 		self.tetris_line_count = 0
 		self.total_line_count = None
-		self.has_been_valid = False
 
 	def setFrame(self, frame):
 		lines_img = frame.crop(self.lines_loc)
@@ -41,6 +40,11 @@ class Player:
 		return self.frames
 
 	def setLineCount(self, line_count):
+		self.derived_data.append((
+			line_count,
+			self.tetris_line_count,
+		))
+
 		if line_count == self.total_line_count:
 			return
 
@@ -55,36 +59,32 @@ class Player:
 
 		if line_count == None or line_count == 0:
 			self.tetris_line_count = 0
-			self.total_line_count = line_count
-			return
 
-		lines = line_count - (self.total_line_count or 0)
+		else:
+			lines = line_count - (self.total_line_count or 0)
+
+			if lines == 4:
+				self.tetris_line_count += 4
+
 		self.total_line_count = line_count
+		derived_values = (self.total_line_count, self.tetris_line_count)
 
-		if lines == 4:
-			self.tetris_line_count += 4
+		# Adjust all the frame data from READ DELAY
+		for delayed_frame_idx in range(FRAMES_READ_DELAY + 1):
+			self.derived_data[-1 * delayed_frame_idx - 1] = derived_values
 
-		# self.line_clear_events.append({
-		#	"lines": lines,
-		#	"trt": self.tetris_line_count / self.total_line_count
-		# })
+	def getTRTLabel(self, frame_idx):
+		total_line_count, tetris_line_count = self.derived_data[frame_idx]
 
-	def getTRT(self):
-		if self.total_line_count == None or self.total_line_count == 0:
-			return None
-
-		return self.tetris_line_count / self.total_line_count
-
-	def getTRTLabel(self):
-		if self.total_line_count == None:
+		if total_line_count == None:
 			label = ""
-		elif self.total_line_count == 0:
+		elif total_line_count == 0:
 			label = "---"
 		else:
-			trt = self.getTRT()
+			trt = tetris_line_count / total_line_count
 
-			if trt <= 0:
-				label = "---"
+			if trt < 0:
+				label = "???"
 			elif trt >= 1:
 				label = "100"
 			elif trt < 1:

@@ -89,21 +89,14 @@ out = cv2.VideoWriter(
 	(1920, 1080)
 )
 
-frame_count = 0
-
 if cap:
 	total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 else:
 	total_frames = len(json_frames)
 
 
-def drawPlayerData(player, frame):
-	global trt_box_img
-	global box_value_xy
-	global do_verify
-	global font
-
-	label = player.getTRTLabel()
+def drawPlayerData(player, frame, frame_idx):
+	label = player.getTRTLabel(frame_idx)
 
 	trt_box = trt_box_img.copy()
 	draw = ImageDraw.Draw(trt_box)
@@ -121,7 +114,7 @@ def drawPlayerData(player, frame):
 		draw = ImageDraw.Draw(tls_box)
 		draw.text(
 			box_value_xy,
-			"%03d" % player.tetris_line_count,
+			"%03d" % player.derived_data[frame_idx][1], # use a getter damnit!
 			(255,255,255,255),
 			font=font
 		)
@@ -129,7 +122,20 @@ def drawPlayerData(player, frame):
 		frame.paste(tls_box, player.tls_box_xy, tls_box)
 
 
+def drawBufferEntry(entry):
+	idx, frame = entry
 
+	for player in players:
+		drawPlayerData(player, frame, idx)
+
+	frame = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
+	out.write(frame);
+
+	print("Processed frame %d of %d (at %5.1f fps) (json)" % (idx + 1, total_frames, (idx + 1) / (time.time() - frame_start)), end="\r")
+
+
+frame_buffer_size = 1 # dirty, make a config to synchronize with read delay instead - gee -_-
+frame_buffer = []
 frame_start = time.time()
 
 if from_json_frames:
@@ -145,21 +151,22 @@ if from_json_frames:
 		for player_idx, player_frame_data in enumerate(frame_data):
 			player = players[player_idx]
 			player.setFrameData(player_frame_data)
-			drawPlayerData(player, trt_frame)
 
-		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
-		out.write(trt_frame);
+		frame_buffer.append((frame_idx, trt_frame))
 
-		print("Processed frame %d of %d (at %5.1f fps) (json)" % (frame_idx + 1, total_frames, (frame_idx + 1) / (time.time() - frame_start)), end="\r")
+		if len(frame_buffer) > frame_buffer_size:
+			drawBufferEntry(frame_buffer.pop(0))
 
 else:
+	frame_idx = -1
+
 	while True:
 		cv2_retval, cv2_image = cap.read()
 
 		if not cv2_retval:
 			break
 
-		frame_count += 1
+		frame_idx += 1
 
 		cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
 		frame = Image.fromarray(cv2_image)
@@ -171,12 +178,16 @@ else:
 
 		for player in players:
 			player.setFrame(frame)
-			drawPlayerData(player, trt_frame)
 
-		trt_frame = cv2.cvtColor(numpy.array(trt_frame), cv2.COLOR_RGB2BGR)
-		out.write(trt_frame);
+		frame_buffer.append((frame_idx, trt_frame))
 
-		print("Processed frame %d of %d (at %5.1f fps) (ocr)" % (frame_count, total_frames, frame_count / (time.time() - frame_start)), end="\r")
+		if len(frame_buffer) > frame_buffer_size:
+			drawBufferEntry(frame_buffer.pop(0))
+
+
+# adds last frames from buffer
+while frame_buffer:
+	drawBufferEntry(frame_buffer.pop(0))
 
 out.release()
 
@@ -184,4 +195,4 @@ out.release()
 with open(json_frames_file, "w+") as frames:
 	json.dump(list(zip(player1.getFrames(), player2.getFrames())), frames)
 
-print("\nDone - processed %d frames in %d seconds" % (frame_count, int(time.time() - start_time)))
+print("\nDone - processed %d frames in %d seconds" % (total_frames, int(time.time() - start_time)))
