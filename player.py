@@ -66,6 +66,9 @@ class Player:
 		else:
 			lines = line_count - (self.total_line_count or 0)
 
+			if lines < 0 or lines > 4:
+				print('WARNING: Invalid line jump detected: %d lines at frame %d\n' % (lines, len(self.derived_data)))
+
 			if lines == 4:
 				self.tetris_line_count += 4
 
