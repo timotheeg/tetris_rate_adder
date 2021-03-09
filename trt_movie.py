@@ -42,14 +42,14 @@ composite_color = (255, 0, 254, 255)
 box_header_xy = (19, 24)
 box_value_xy = (21, 58)
 
-p1_line_count_xywh = (629, 235, 90, 28)
+p1_lines_xywh = (629, 235, 90, 28)
 p1_score_xywh = (660, 81, 232, 35)
 p1_level_xywh = (491, 1003, 59, 28)
 p1_trt_box_xy = (451, 842)
 p1_ocr_box_xy = (451, 121)
 p1_tls_box_xy = (451, 227)
 
-p2_line_count_xywh = (1038, 235, 90, 28)
+p2_lines_xywh = (1038, 235, 90, 28)
 p2_score_xywh = (1069, 81, 232, 35)
 p2_level_xywh = (1377, 1003, 59, 28)
 p2_trt_box_xy = (1337, 842)
@@ -73,8 +73,8 @@ tls_box_img = Image.open(box_template)
 draw = ImageDraw.Draw(tls_box_img)
 draw.text(box_header_xy, "TLS", (255,255,255), font=font)
 
-player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy, p1_ocr_box_xy, p1_tls_box_xy)
-player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy, p2_ocr_box_xy, p2_tls_box_xy)
+player1 = Player(p1_lines_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy, p1_ocr_box_xy, p1_tls_box_xy)
+player2 = Player(p2_lines_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy, p2_ocr_box_xy, p2_tls_box_xy)
 
 players = [player1, player2]
 
