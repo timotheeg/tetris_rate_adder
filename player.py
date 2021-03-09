@@ -1,3 +1,4 @@
+import sys
 from utils import xywh_to_ltrb
 from digitocr import scoreImage
 
@@ -68,6 +69,7 @@ class Player:
 
 			if lines < 0 or lines > 4:
 				print('WARNING: Invalid line jump detected: %d lines at frame %d\n' % (lines, len(self.derived_data)))
+				sys.exit(1)
 
 			if lines == 4:
 				self.tetris_line_count += 4
