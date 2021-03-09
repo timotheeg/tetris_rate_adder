@@ -25,11 +25,13 @@ class Player:
 		lines_img = frame.crop(self.lines_loc)
 		lines = scoreImage(lines_img, "TDD")[1]
 
-		score_img = frame.crop(self.score_loc)
-		score = scoreImage(score_img, "DDDDDD")[1]
+		#score_img = frame.crop(self.score_loc)
+		#score = scoreImage(score_img, "DDDDDD")[1]
 
-		level_img = frame.crop(self.level_loc)
-		level = scoreImage(level_img, "TD")[1]
+		#level_img = frame.crop(self.level_loc)
+		#level = scoreImage(level_img, "TD")[1]
+
+		score = level = 0
 
 		self.setFrameData((lines, score, level))
 
