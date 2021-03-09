@@ -46,13 +46,15 @@ p1_line_count_xywh = (629, 235, 90, 28)
 p1_score_xywh = (660, 81, 232, 35)
 p1_level_xywh = (491, 1003, 59, 28)
 p1_trt_box_xy = (451, 842)
-p1_tls_box_xy = (451, 176)
+p1_ocr_box_xy = (451, 121)
+p1_tls_box_xy = (451, 227)
 
 p2_line_count_xywh = (1038, 235, 90, 28)
 p2_score_xywh = (1069, 81, 232, 35)
 p2_level_xywh = (1377, 1003, 59, 28)
 p2_trt_box_xy = (1337, 842)
-p2_tls_box_xy = (1337, 176)
+p2_ocr_box_xy = (1337, 121)
+p2_tls_box_xy = (1337, 227)
 
 trt_template = './trts_template.png'
 box_template = './trt_box.png'
@@ -63,12 +65,16 @@ trt_box_img = Image.open(box_template)
 draw = ImageDraw.Draw(trt_box_img)
 draw.text(box_header_xy, "TRT", (255,255,255), font=font)
 
+ocr_box_img = Image.open(box_template)
+draw = ImageDraw.Draw(ocr_box_img)
+draw.text(box_header_xy, "OCR", (255,255,255), font=font)
+
 tls_box_img = Image.open(box_template)
 draw = ImageDraw.Draw(tls_box_img)
 draw.text(box_header_xy, "TLS", (255,255,255), font=font)
 
-player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy, p1_tls_box_xy)
-player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy, p2_tls_box_xy)
+player1 = Player(p1_line_count_xywh, p1_score_xywh, p1_level_xywh, p1_trt_box_xy, p1_ocr_box_xy, p1_tls_box_xy)
+player2 = Player(p2_line_count_xywh, p2_score_xywh, p2_level_xywh, p2_trt_box_xy, p2_ocr_box_xy, p2_tls_box_xy)
 
 players = [player1, player2]
 
@@ -110,6 +116,17 @@ def drawPlayerData(player, frame, frame_idx):
 	frame.paste(trt_box, player.trt_box_xy, trt_box)
 
 	if do_verify:
+		ocr_box = ocr_box_img.copy()
+		draw = ImageDraw.Draw(ocr_box)
+		draw.text(
+			box_value_xy,
+			"%03d" % (player.derived_data[frame_idx][0] or 0, ), # use a getter damnit!
+			(255,255,255,255),
+			font=font
+		)
+
+		frame.paste(ocr_box, player.ocr_box_xy, ocr_box)
+
 		tls_box = tls_box_img.copy()
 		draw = ImageDraw.Draw(tls_box)
 		draw.text(
